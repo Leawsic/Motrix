@@ -3,6 +3,11 @@ import { DEFAULT_LOCALE } from '@shared/constants/locales'
 import type { MotrixAppSettings } from '@shared/types/settings'
 import { z } from 'zod'
 import { supportedLocaleSchema } from './locale'
+import {
+  DEFAULT_DOWNLOAD_CATEGORIES,
+  DOWNLOAD_CATEGORIES,
+  type DownloadCategory,
+} from '@shared/constants/download-categories'
 
 export const appUpdateChannelSchema = z.enum(['stable', 'beta'])
 
@@ -13,6 +18,8 @@ export const magnetFileSelectionTimeoutSecondsSchema = z
   .int()
   .min(MAGNET_FILE_SELECTION_TIMEOUT_MIN_SECONDS)
   .max(MAGNET_FILE_SELECTION_TIMEOUT_MAX_SECONDS)
+
+const downloadCategorySchema = z.record(z.string()).catch(DEFAULT_DOWNLOAD_CATEGORIES)
 
 export const appSettingsSchema = z.object({
   launchAtStartup: z.boolean().catch(false),
@@ -43,6 +50,8 @@ export const appSettingsSchema = z.object({
   warnBeforeQuit: z.boolean().catch(true),
   checkForUpdatesOnLaunch: z.boolean().catch(true),
   updateChannel: appUpdateChannelSchema.catch('stable'),
+  categorizeDownloadsByType: z.boolean().catch(false),
+  downloadCategories: downloadCategorySchema,
 })
 
 export const DEFAULT_APP_SETTINGS: MotrixAppSettings = appSettingsSchema.parse(

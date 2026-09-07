@@ -6,6 +6,7 @@ import {
   type AdaptedMux,
   sanitizeFilename,
 } from '@core/bridge-receiver/submit-download-adapter'
+import { getCategoryForFile, DEFAULT_DOWNLOAD_CATEGORIES } from '@shared/constants/download-categories'
 import type {
   AddTorrentParams,
   CreateDownloadParams,
@@ -413,8 +414,20 @@ async function handleCreateTaskUnderAdmission(
         )
       : await deps.finalNamePicker.pick(effectiveSaveDir, desiredName)
 
+  // Apply download categorization by file type if enabled
+  let categorizedSaveDir = effectiveSaveDir
+  if (appSettings.categorizeDownloadsByType) {
+    const category = getCategoryForFile(finalName)
+    const categoryFolderName =
+      appSettings.downloadCategories?.[category] ??
+      DEFAULT_DOWNLOAD_CATEGORIES[category]
+    if (categoryFolderName) {
+      categorizedSaveDir = path.join(effectiveSaveDir, categoryFolderName)
+    }
+  }
+
   const taskType = deriveTaskType(req)
-  let finalPath = path.join(effectiveSaveDir, finalName)
+  let finalPath = path.join(categorizedSaveDir, finalName)
   const btStoragePlan: BtStoragePlan | null = parsedBtLayout
     ? createBtStoragePlan(taskId, effectiveSaveDir, parsedBtLayout)
     : null
@@ -462,7 +475,7 @@ async function handleCreateTaskUnderAdmission(
   // aria2_motrix has the matching mkdirs on its side, so an mkdir
   // error here is logged but not fatal — defence-in-depth, not
   // single point of failure.
-  const ensureDir = isTorrentLikeType(taskType) ? diskPath : effectiveSaveDir
+  const ensureDir = isTorrentLikeType(taskType) ? diskPath : categorizedSaveDir
   try {
     await mkdir(ensureDir, { recursive: true })
   } catch (cause) {
@@ -519,7 +532,7 @@ async function handleCreateTaskUnderAdmission(
     const params: CreateDownloadParams = {
       uris: [...req.uris],
       // applyPathOverrides HTTP equivalent: dir = saveDir, out = <name>.motrix
-      saveDir: effectiveSaveDir,
+      saveDir: categorizedSaveDir,
       filename: `${finalName}${INCOMPLETE_SUFFIX}`,
       performanceProfile: engineSettings.performanceProfile,
       userAgent: engineSettings.userAgent,
@@ -535,13 +548,14 @@ async function handleCreateTaskUnderAdmission(
     const pickHttpName = async (nextDesiredName: string): Promise<void> => {
       if (nextDesiredName === currentHttpDesiredName) return
       finalName = await deps.finalNamePicker.pick(
-        effectiveSaveDir,
+        categorizedSaveDir,
         nextDesiredName
       )
       currentHttpDesiredName = nextDesiredName
-      finalPath = path.join(effectiveSaveDir, finalName)
+      finalPath = path.join(categorizedSaveDir, finalName)
       diskPath = toTempPath(finalPath)
       params.filename = `${finalName}${INCOMPLETE_SUFFIX}`
+      params.saveDir = categorizedSaveDir
     }
 
     // 3.4. Mux pre-resolve seam (desktop Add-Task path).
@@ -585,14 +599,14 @@ async function handleCreateTaskUnderAdmission(
             : ''
           const muxFinalName = titleBase
             ? await deps.finalNamePicker.pick(
-                effectiveSaveDir,
+                categorizedSaveDir,
                 ensureMediaExtension(titleBase, muxResult.container)
               )
             : finalName
           const adaptedMux: AdaptedMux = {
             kind: 'mux',
             taskId,
-            saveDir: effectiveSaveDir,
+            saveDir: categorizedSaveDir,
             finalName: muxFinalName,
             videoUrl: muxResult.videoUrl,
             audioUrl: muxResult.audioUrl,
@@ -920,7 +934,7 @@ async function handleCreateTaskUnderAdmission(
     name: finalName,
     kind: taskKind,
     type: taskType,
-    saveDir: effectiveSaveDir,
+    saveDir: categorizedSaveDir,
     createdAt: now,
     updatedAt: now,
     uris: canonicalUris,
