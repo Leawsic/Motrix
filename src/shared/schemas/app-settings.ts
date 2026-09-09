@@ -16,7 +16,7 @@ export const magnetFileSelectionTimeoutSecondsSchema = z
   .max(MAGNET_FILE_SELECTION_TIMEOUT_MAX_SECONDS)
 
 const downloadCategorySchema = z
-  .record(z.string())
+  .record(z.string(), z.string())
   .catch(DEFAULT_DOWNLOAD_CATEGORIES)
 
 export const appSettingsSchema = z.object({
