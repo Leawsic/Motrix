@@ -13,7 +13,6 @@ import type {
   EngineAdapter,
 } from '@core/engine/engine-adapter'
 import { DIRECT_RESOURCE_METADATA_PROFILE } from '@core/engine/engine-adapter'
-import { getCategoryForFile, DEFAULT_DOWNLOAD_CATEGORIES } from '@shared/constants/download-categories'
 import { newEngineTaskId, newTaskId } from '@core/lib/ids'
 import { getLogger } from '@core/logger'
 import type { HookAuditLog } from '@core/plugin/hooks/audit-log'
@@ -29,6 +28,10 @@ import {
   normalizeProxyUrl,
 } from '@core/proxy/aria2-proxy-routing'
 import type { SettingsManager } from '@core/settings/settings-manager'
+import {
+  DEFAULT_DOWNLOAD_CATEGORIES,
+  getCategoryForFile,
+} from '@shared/constants/download-categories'
 import { INCOMPLETE_SUFFIX } from '@shared/constants/incomplete'
 import { AppError, ErrorCode } from '@shared/errors'
 import type {

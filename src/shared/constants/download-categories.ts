@@ -17,7 +17,9 @@ export const DOWNLOAD_CATEGORIES: readonly DownloadCategory[] = [
   'General',
 ] as const
 
-export const CATEGORY_EXTENSIONS: Readonly<Record<Exclude<DownloadCategory, 'General'>, readonly string[]>> = {
+export const CATEGORY_EXTENSIONS: Readonly<
+  Record<Exclude<DownloadCategory, 'General'>, readonly string[]>
+> = {
   Documents: [
     '.pdf',
     '.doc',
@@ -127,15 +129,20 @@ export const CATEGORY_EXTENSIONS: Readonly<Record<Exclude<DownloadCategory, 'Gen
     '.3gp',
     '.3g2',
     '.f4v',
-    '.mkv',
   ],
 }
 
-const EXTENSION_TO_CATEGORY: ReadonlyMap<string, Exclude<DownloadCategory, 'General'>> = (() => {
+const EXTENSION_TO_CATEGORY: ReadonlyMap<
+  string,
+  Exclude<DownloadCategory, 'General'>
+> = (() => {
   const map = new Map<string, Exclude<DownloadCategory, 'General'>>()
   for (const [category, extensions] of Object.entries(CATEGORY_EXTENSIONS)) {
     for (const ext of extensions) {
-      map.set(ext.toLowerCase(), category as Exclude<DownloadCategory, 'General'>)
+      map.set(
+        ext.toLowerCase(),
+        category as Exclude<DownloadCategory, 'General'>
+      )
     }
   }
   return map
@@ -150,7 +157,9 @@ export function getCategoryFolderName(category: DownloadCategory): string {
   return category
 }
 
-export const DEFAULT_DOWNLOAD_CATEGORIES: Readonly<Record<DownloadCategory, string>> = {
+export const DEFAULT_DOWNLOAD_CATEGORIES: Readonly<
+  Record<DownloadCategory, string>
+> = {
   Documents: 'Documents',
   Compressed: 'Compressed',
   Music: 'Music',

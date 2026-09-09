@@ -1,12 +1,9 @@
 import { RunMode } from '@shared/constants'
+import { DEFAULT_DOWNLOAD_CATEGORIES } from '@shared/constants/download-categories'
 import { DEFAULT_LOCALE } from '@shared/constants/locales'
 import type { MotrixAppSettings } from '@shared/types/settings'
 import { z } from 'zod'
 import { supportedLocaleSchema } from './locale'
-import {
-  DEFAULT_DOWNLOAD_CATEGORIES,
-  type DownloadCategory,
-} from '@shared/constants/download-categories'
 
 export const appUpdateChannelSchema = z.enum(['stable', 'beta'])
 
