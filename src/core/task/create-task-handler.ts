@@ -6,7 +6,6 @@ import {
   type AdaptedMux,
   sanitizeFilename,
 } from '@core/bridge-receiver/submit-download-adapter'
-import { getCategoryForFile, DEFAULT_DOWNLOAD_CATEGORIES } from '@shared/constants/download-categories'
 import type {
   AddTorrentParams,
   CreateDownloadParams,
@@ -14,6 +13,7 @@ import type {
   EngineAdapter,
 } from '@core/engine/engine-adapter'
 import { DIRECT_RESOURCE_METADATA_PROFILE } from '@core/engine/engine-adapter'
+import { getCategoryForFile, DEFAULT_DOWNLOAD_CATEGORIES } from '@shared/constants/download-categories'
 import { newEngineTaskId, newTaskId } from '@core/lib/ids'
 import { getLogger } from '@core/logger'
 import type { HookAuditLog } from '@core/plugin/hooks/audit-log'

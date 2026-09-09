@@ -5,7 +5,6 @@ import { z } from 'zod'
 import { supportedLocaleSchema } from './locale'
 import {
   DEFAULT_DOWNLOAD_CATEGORIES,
-  DOWNLOAD_CATEGORIES,
   type DownloadCategory,
 } from '@shared/constants/download-categories'
 
@@ -19,7 +18,9 @@ export const magnetFileSelectionTimeoutSecondsSchema = z
   .min(MAGNET_FILE_SELECTION_TIMEOUT_MIN_SECONDS)
   .max(MAGNET_FILE_SELECTION_TIMEOUT_MAX_SECONDS)
 
-const downloadCategorySchema = z.record(z.string()).catch(DEFAULT_DOWNLOAD_CATEGORIES)
+const downloadCategorySchema = z
+  .record(z.string())
+  .catch(DEFAULT_DOWNLOAD_CATEGORIES)
 
 export const appSettingsSchema = z.object({
   launchAtStartup: z.boolean().catch(false),
