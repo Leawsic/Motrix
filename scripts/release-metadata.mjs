@@ -25,6 +25,7 @@ export function resolveReleaseMetadata({
   eventName,
   refName,
   refProtected,
+  repositoryIsFork = false,
   packageVersion,
 }) {
   const packageMetadata = parseStrictSemVer(
@@ -53,7 +54,12 @@ export function resolveReleaseMetadata({
       `Release tag version ${tagVersion} does not match package.json version ${packageVersion}`
     )
   }
-  if (refProtected !== true && refProtected !== 'true') {
+  if (
+    refProtected !== true &&
+    refProtected !== 'true' &&
+    repositoryIsFork !== true &&
+    repositoryIsFork !== 'true'
+  ) {
     throw new Error(`Release tag ${refName} is not protected by a ruleset`)
   }
 
@@ -118,6 +124,9 @@ function main() {
     refName: process.env.RELEASE_REF_NAME ?? process.env.GITHUB_REF_NAME,
     refProtected:
       process.env.RELEASE_REF_PROTECTED ?? process.env.GITHUB_REF_PROTECTED,
+    repositoryIsFork:
+      process.env.RELEASE_REPOSITORY_IS_FORK ??
+      process.env.GITHUB_REPOSITORY_IS_FORK,
     packageVersion: packageJson.version,
   })
 

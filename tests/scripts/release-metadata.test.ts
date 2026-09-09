@@ -54,6 +54,22 @@ describe('release metadata', () => {
     })
   })
 
+  it('accepts an exact matching tag from a fork without a ruleset', () => {
+    expect(
+      resolveReleaseMetadata({
+        eventName: 'push',
+        refName: 'v2.0.0-beta.1',
+        refProtected: 'false',
+        repositoryIsFork: 'true',
+        packageVersion: '2.0.0-beta.1',
+      })
+    ).toEqual({
+      version: '2.0.0-beta.1',
+      prerelease: true,
+      channel: 'beta',
+    })
+  })
+
   it('keeps hyphenated build metadata on the stable channel', () => {
     expect(
       resolveReleaseMetadata({

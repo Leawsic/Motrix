@@ -63,6 +63,7 @@ jobs:
           RELEASE_EVENT_NAME: ${{ github.event_name }}
           RELEASE_REF_NAME: ${{ github.ref_name }}
           RELEASE_REF_PROTECTED: ${{ github.ref_protected }}
+          RELEASE_REPOSITORY_IS_FORK: ${{ github.event.repository.fork }}
         run: >-
           node scripts/release-metadata.mjs
           --package-json package.json
