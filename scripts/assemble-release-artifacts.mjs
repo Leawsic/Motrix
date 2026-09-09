@@ -113,6 +113,7 @@ export async function assembleReleaseArtifacts({
   outputDirectory,
   version,
   channel = releaseChannelFromVersion(version),
+  targets = RELEASE_TARGETS.map((target) => target.name),
 }) {
   if (typeof version !== 'string' || version.length === 0) {
     throw new Error('Expected release version')
@@ -123,7 +124,14 @@ export async function assembleReleaseArtifacts({
   const outputRoot = path.resolve(outputDirectory)
   const targetResults = []
 
-  for (const target of RELEASE_TARGETS) {
+  const selectedTargets = RELEASE_TARGETS.filter((target) =>
+    targets.includes(target.name)
+  )
+  if (selectedTargets.length === 0) {
+    throw new Error(`No release targets selected: ${targets.join(', ')}`)
+  }
+
+  for (const target of selectedTargets) {
     const directory = path.join(inputRoot, `release-input-${target.name}`)
     const manifestNames = targetManifestNames(target, channel)
     const files = await collectTargetFiles(
@@ -191,21 +199,23 @@ export async function assembleReleaseArtifacts({
     (target) => target.name === 'darwin-arm64'
   )
   const macX64 = targetResults.find((target) => target.name === 'darwin-x64')
-  for (const manifestName of targetManifestNames(macX64, channel)) {
-    const macManifest = mergeMacManifests(
-      macX64.manifests.get(manifestName),
-      macArm64.manifests.get(manifestName),
-      manifestName
-    )
-    addOutputFile(outputFiles, manifestName, {
-      kind: 'content',
-      content: dump(macManifest, {
-        lineWidth: -1,
-        noRefs: true,
-        sortKeys: false,
-      }),
-      target: 'darwin',
-    })
+  if (macArm64 && macX64) {
+    for (const manifestName of targetManifestNames(macX64, channel)) {
+      const macManifest = mergeMacManifests(
+        macX64.manifests.get(manifestName),
+        macArm64.manifests.get(manifestName),
+        manifestName
+      )
+      addOutputFile(outputFiles, manifestName, {
+        kind: 'content',
+        content: dump(macManifest, {
+          lineWidth: -1,
+          noRefs: true,
+          sortKeys: false,
+        }),
+        target: 'darwin',
+      })
+    }
   }
 
   for (const target of targetResults) {
@@ -617,11 +627,17 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const outputDirectory = path.resolve(readArg('--output') ?? 'release')
   const version =
     readArg('--version') ?? process.env.GITHUB_REF_NAME?.replace(/^v/, '')
+  const targets = (
+    readArg('--targets') ?? RELEASE_TARGETS.map((target) => target.name).join(',')
+  )
+    .split(',')
+    .filter(Boolean)
   const result = await assembleReleaseArtifacts({
     inputDirectory,
     outputDirectory,
     version,
     channel: readArg('--channel') ?? releaseChannelFromVersion(version),
+    targets,
   })
   console.log(
     `Assembled ${result.assets.length} release asset(s) and ${result.manifests.length} update manifest(s)`

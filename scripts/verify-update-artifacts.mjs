@@ -8,14 +8,26 @@ import { verifyZsyncFile } from './appimage-artifact.mjs'
 import { parseStrictSemVer } from './release-metadata.mjs'
 
 const MANIFEST_PLATFORMS = [
-  { suffix: '', legacyExtension: '.exe', requiredExtensions: ['.exe'] },
-  { suffix: '-mac', legacyExtension: '.zip', requiredExtensions: ['.zip'] },
   {
+    target: 'win32-x64',
+    suffix: '',
+    legacyExtension: '.exe',
+    requiredExtensions: ['.exe'],
+  },
+  {
+    target: 'darwin-x64',
+    suffix: '-mac',
+    legacyExtension: '.zip',
+    requiredExtensions: ['.zip'],
+  },
+  {
+    target: 'linux-x64',
     suffix: '-linux',
     legacyExtension: '.deb',
     requiredExtensions: ['.deb', '.rpm', '.AppImage'],
   },
   {
+    target: 'linux-arm64',
     suffix: '-linux-arm64',
     legacyExtension: '.deb',
     requiredExtensions: ['.deb', '.rpm', '.AppImage'],
@@ -27,10 +39,11 @@ export async function verifyUpdateArtifacts({
   version,
   channel = releaseChannelFromVersion(version),
   requireAll = false,
+  targets,
 }) {
   if (!version) throw new Error('Expected release version')
   assertReleaseVersionChannel(version, channel)
-  const manifestNames = expectedManifestNames(channel)
+  const manifestNames = expectedManifestNames(channel, targets)
   const expectedSet = new Set(manifestNames)
   const unexpected = (await readdir(directory)).filter(
     (name) => isUpdateManifest(name) && !expectedSet.has(name)
@@ -114,10 +127,13 @@ export async function verifyUpdateArtifacts({
   }
 }
 
-function expectedManifestNames(channel) {
+function expectedManifestNames(channel, targets) {
   const prefixes = channel === 'stable' ? ['latest', 'beta'] : ['beta']
+  const platforms = targets?.length
+    ? MANIFEST_PLATFORMS.filter((platform) => targets.includes(platform.target))
+    : MANIFEST_PLATFORMS
   return prefixes.flatMap((prefix) =>
-    MANIFEST_PLATFORMS.map(({ suffix }) => `${prefix}${suffix}.yml`)
+    platforms.map(({ suffix }) => `${prefix}${suffix}.yml`)
   )
 }
 
@@ -257,11 +273,13 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const version =
     readArg('--version') ?? process.env.GITHUB_REF_NAME?.replace(/^v/, '')
   const requireAll = process.argv.includes('--require-all')
+  const targets = (readArg('--targets') ?? '').split(',').filter(Boolean)
   const result = await verifyUpdateArtifacts({
     directory,
     version,
     channel: readArg('--channel') ?? releaseChannelFromVersion(version),
     requireAll,
+    targets: targets.length > 0 ? targets : undefined,
   })
   console.log(
     `Verified ${result.manifests.length} update manifest(s) and ${result.assets.length} asset(s)`

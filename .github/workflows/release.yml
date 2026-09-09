@@ -122,38 +122,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: darwin-arm64
-            os: macos-26
-            platform: darwin
-            arch: arm64
-            rust_target: aarch64-apple-darwin
-            electron_builder_args: --mac --arm64
-            resources_dir: release/mac-arm64/Motrix.app/Contents/Resources
-            app_path: release/mac-arm64/Motrix.app
-          - target: darwin-x64
-            os: macos-26-intel
-            platform: darwin
-            arch: x64
-            rust_target: x86_64-apple-darwin
-            electron_builder_args: --mac --x64
-            resources_dir: release/mac/Motrix.app/Contents/Resources
-            app_path: release/mac/Motrix.app
-          - target: linux-x64
-            os: ubuntu-22.04
-            platform: linux
-            arch: x64
-            rust_target: x86_64-unknown-linux-musl
-            electron_builder_args: --linux deb rpm AppImage --x64
-            resources_dir: release/linux-unpacked/resources
-            app_path: release/linux-unpacked
-          - target: linux-arm64
-            os: ubuntu-22.04-arm
-            platform: linux
-            arch: arm64
-            rust_target: aarch64-unknown-linux-musl
-            electron_builder_args: --linux deb rpm AppImage --arm64
-            resources_dir: release/linux-arm64-unpacked/resources
-            app_path: release/linux-arm64-unpacked
           - target: win32-x64
             os: windows-2025
             platform: win32
@@ -566,24 +534,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - target: darwin-arm64
-            os: macos-26
-            platform: darwin
-            arch: arm64
-            signing_environment: macos-release-signing
-            electron_builder_args: --mac --arm64
-            resources_dir: release/mac-arm64/Motrix.app/Contents/Resources
-            app_path: release/mac-arm64/Motrix.app
-            electron_sha256: a8711350df6d9bafb8348f11fa7310a8d580edff476caafbf69d50dbf2d8043b
-          - target: darwin-x64
-            os: macos-26-intel
-            platform: darwin
-            arch: x64
-            signing_environment: macos-release-signing
-            electron_builder_args: --mac --x64
-            resources_dir: release/mac/Motrix.app/Contents/Resources
-            app_path: release/mac/Motrix.app
-            electron_sha256: 5def2f57eb119406997892a475794807fc32eba9d090160aaddc81f6d5657a36
           - target: win32-x64
             os: windows-2025
             platform: win32
@@ -1556,16 +1506,18 @@ jobs:
           node scripts/assemble-release-artifacts.mjs
           --input release-input
           --output release
-          --version "$RELEASE_VERSION"
-          --channel "$RELEASE_CHANNEL"
+           --version "$RELEASE_VERSION"
+           --channel "$RELEASE_CHANNEL"
+           --targets win32-x64
 
       - name: Verify update artifacts
         run: >-
           pnpm --config.verify-deps-before-run=false run check:update-artifacts
           -- --version "$RELEASE_VERSION"
-          --dir release
-          --channel "$RELEASE_CHANNEL"
-          --require-all
+           --dir release
+           --channel "$RELEASE_CHANNEL"
+           --targets win32-x64
+           --require-all
 
       - name: Upload validated release
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -1610,6 +1562,7 @@ jobs:
   plan-container-publication:
     name: Inspect Server container publication state
     needs: [preflight, publish]
+    if: false
     if: >-
       github.event_name == 'push' &&
       startsWith(github.ref, 'refs/tags/v')
@@ -1681,6 +1634,7 @@ jobs:
   build-container-platform:
     name: Build Server / ${{ matrix.platform }}
     needs: [preflight, publish, plan-container-publication]
+    if: false
     if: needs.plan-container-publication.outputs.action == 'build'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
@@ -1861,23 +1815,8 @@ jobs:
     name: Finalize and publish verified Server index
     needs:
       [preflight, publish, plan-container-publication, build-container-platform]
-    if: >-
-      always() &&
-      github.event_name == 'push' &&
-      startsWith(github.ref, 'refs/tags/v') &&
-      needs.preflight.result == 'success' &&
-      needs.publish.result == 'success' &&
-      needs.plan-container-publication.result == 'success' &&
-      (
-        (
-          needs.plan-container-publication.outputs.action == 'build' &&
-          needs.build-container-platform.result == 'success'
-        ) ||
-        (
-          needs.plan-container-publication.outputs.action != 'build' &&
-          needs.build-container-platform.result == 'skipped'
-        )
-      )
+    if: false
+    # Disabled for the Windows-only desktop release.
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     environment: container-release
@@ -2213,9 +2152,7 @@ jobs:
   verify-container-runtime:
     name: Verify Server runtime / ${{ matrix.platform }}
     needs: [preflight, publish-container]
-    if: >-
-      github.event_name == 'push' &&
-      startsWith(github.ref, 'refs/tags/v')
+    if: false
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     permissions:
@@ -2278,10 +2215,7 @@ jobs:
   promote-container-aliases:
     name: Promote verified stable Server aliases
     needs: [preflight, publish-container, verify-container-runtime]
-    if: >-
-      github.event_name == 'push' &&
-      startsWith(github.ref, 'refs/tags/v') &&
-      needs.preflight.outputs.container_prerelease != 'true'
+    if: false
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     environment: container-release
