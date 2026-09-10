@@ -627,9 +627,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const outputDirectory = path.resolve(readArg('--output') ?? 'release')
   const version =
     readArg('--version') ?? process.env.GITHUB_REF_NAME?.replace(/^v/, '')
-  const targets = (
-    readArg('--targets') ?? RELEASE_TARGETS.map((target) => target.name).join(',')
-  )
+  const defaultTargets = RELEASE_TARGETS.map((target) => target.name).join(',')
+  const targets = (readArg('--targets') ?? defaultTargets)
     .split(',')
     .filter(Boolean)
   const result = await assembleReleaseArtifacts({
