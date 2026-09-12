@@ -165,7 +165,7 @@ Beta 只发布不可变的版本 tag，不会更新 `latest`；仓库的 `compos
 ```bash
 mkdir -p motrix-data downloads
 sudo chown 1000:1000 motrix-data downloads
-export MOTRIX_IMAGE='docker.io/motrixapp/motrix-server:2.0.0-beta.33'
+export MOTRIX_IMAGE='docker.io/motrixapp/motrix-server:2.0.0-beta.34'
 export MOTRIX_PUBLIC_URL='http://nas.example.lan:8080'
 docker compose pull server
 docker compose up -d --wait
