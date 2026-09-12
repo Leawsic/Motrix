@@ -1508,7 +1508,7 @@ jobs:
           --output release
            --version "$RELEASE_VERSION"
            --channel "$RELEASE_CHANNEL"
-           --targets win32-x64
+           --targets=win32-x64
 
       - name: Verify update artifacts
         run: >-
@@ -1516,7 +1516,7 @@ jobs:
           -- --version "$RELEASE_VERSION"
            --dir release
            --channel "$RELEASE_CHANNEL"
-           --targets win32-x64
+           --targets=win32-x64
            --require-all
 
       - name: Upload validated release

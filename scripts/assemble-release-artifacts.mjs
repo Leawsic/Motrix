@@ -619,7 +619,10 @@ function isSha512(value) {
 
 function readArg(name) {
   const index = process.argv.indexOf(name)
-  return index >= 0 ? process.argv[index + 1] : undefined
+  if (index >= 0) return process.argv[index + 1]
+  const prefix = `${name}=`
+  const inline = process.argv.find((argument) => argument.startsWith(prefix))
+  return inline?.slice(prefix.length)
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
