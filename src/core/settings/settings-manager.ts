@@ -420,7 +420,14 @@ export class SettingsManager {
 
     // Merge app settings
     if (partial.app) {
-      const merged = { ...next.app, ...partial.app }
+      const merged = {
+        ...next.app,
+        ...partial.app,
+        downloadCategories: {
+          ...next.app.downloadCategories,
+          ...(partial.app.downloadCategories ?? {}),
+        },
+      }
       const validated = validateAppSettings(merged as MotrixAppSettings)
 
       // Detect app-namespace restart-required key changes

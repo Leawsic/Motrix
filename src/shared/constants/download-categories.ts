@@ -157,6 +157,17 @@ export function getCategoryFolderName(category: DownloadCategory): string {
   return category
 }
 
+export function isSafeCategoryFolderName(value: string): boolean {
+  return (
+    value.trim().length > 0 &&
+    value !== '.' &&
+    value !== '..' &&
+    !value.includes('/') &&
+    !value.includes('\\') &&
+    !value.includes('\0')
+  )
+}
+
 export const DEFAULT_DOWNLOAD_CATEGORIES: Readonly<
   Record<DownloadCategory, string>
 > = {

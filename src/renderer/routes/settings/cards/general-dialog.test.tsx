@@ -1,5 +1,6 @@
 import '@renderer/lib/i18n'
 import '@testing-library/jest-dom/vitest'
+import { DEFAULT_DOWNLOAD_CATEGORIES } from '@shared/constants/download-categories'
 import { Commands } from '@shared/protocol/commands'
 import { Queries } from '@shared/protocol/queries'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -45,6 +46,8 @@ const SETTINGS_FIXTURE = {
     language: 'en-US',
     traySpeedometer: false,
     magnetFileSelection: true,
+    categorizeDownloadsByType: false,
+    downloadCategories: DEFAULT_DOWNLOAD_CATEGORIES,
   },
 }
 
@@ -159,5 +162,29 @@ describe('<GeneralDialog>', () => {
       app: { launchAtStartup: true },
     })
     expect(onClose).toHaveBeenCalled()
+  })
+
+  it('saves category organization and custom folder names', async () => {
+    render(<GeneralDialog open onClose={() => {}} labelKey="" descKey="" />)
+
+    const toggle = await screen.findByRole('switch', {
+      name: /organize downloads by file type/i,
+    })
+    await userEvent.click(toggle)
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Video' }))
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Video' }),
+      'Clips'
+    )
+    await userEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    await waitFor(() => {
+      expect(transport.invoke).toHaveBeenCalledWith(Commands.UpdateSettings, {
+        app: {
+          categorizeDownloadsByType: true,
+          downloadCategories: { Video: 'Clips' },
+        },
+      })
+    })
   })
 })

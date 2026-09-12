@@ -31,6 +31,7 @@ import type { SettingsManager } from '@core/settings/settings-manager'
 import {
   DEFAULT_DOWNLOAD_CATEGORIES,
   getCategoryForFile,
+  isSafeCategoryFolderName,
 } from '@shared/constants/download-categories'
 import { INCOMPLETE_SUFFIX } from '@shared/constants/incomplete'
 import { AppError, ErrorCode } from '@shared/errors'
@@ -391,48 +392,51 @@ async function handleCreateTaskUnderAdmission(
 
   // 1. Decide final on-disk name (handles collisions).
   const desiredName = deriveDesiredName(req, torrentInfoName)
+  const categorySaveDirForName = (name: string): string => {
+    if (!appSettings.categorizeDownloadsByType) return effectiveSaveDir
+    const category = getCategoryForFile(name)
+    const categoryFolderName =
+      appSettings.downloadCategories?.[category] ??
+      DEFAULT_DOWNLOAD_CATEGORIES[category]
+    return isSafeCategoryFolderName(categoryFolderName)
+      ? path.join(effectiveSaveDir, categoryFolderName)
+      : effectiveSaveDir
+  }
+  // Resolve the category before picking a unique name so collisions are
+  // checked in the actual IDM-style destination folder.
+  let categorizedSaveDir = categorySaveDirForName(desiredName)
+
   if (
     req.type === 'bt' &&
     btInfoHash &&
     req.duplicatePolicy === 'reuse' &&
     deps.finalNamePicker.isTaken &&
-    (await deps.finalNamePicker.isTaken(effectiveSaveDir, desiredName))
+    (await deps.finalNamePicker.isTaken(categorizedSaveDir, desiredName))
   ) {
-    throw existingFilesConflict(btInfoHash, effectiveSaveDir)
+    throw existingFilesConflict(btInfoHash, categorizedSaveDir)
   }
   const reservedNames =
     req.type === 'bt'
       ? reservedBtFinalNames(
           deps.taskManager.getAll(),
-          effectiveSaveDir,
+          categorizedSaveDir,
           req.existingTaskId
         )
       : undefined
+
   let finalName =
     req.type === 'bt'
       ? await deps.finalNamePicker.pick(
-          effectiveSaveDir,
+          categorizedSaveDir,
           desiredName,
           reservedNames
         )
-      : await deps.finalNamePicker.pick(effectiveSaveDir, desiredName)
-
-  // Apply download categorization by file type if enabled
-  let categorizedSaveDir = effectiveSaveDir
-  if (appSettings.categorizeDownloadsByType) {
-    const category = getCategoryForFile(finalName)
-    const categoryFolderName =
-      appSettings.downloadCategories?.[category] ??
-      DEFAULT_DOWNLOAD_CATEGORIES[category]
-    if (categoryFolderName) {
-      categorizedSaveDir = path.join(effectiveSaveDir, categoryFolderName)
-    }
-  }
+      : await deps.finalNamePicker.pick(categorizedSaveDir, desiredName)
 
   const taskType = deriveTaskType(req)
   let finalPath = path.join(categorizedSaveDir, finalName)
   const btStoragePlan: BtStoragePlan | null = parsedBtLayout
-    ? createBtStoragePlan(taskId, effectiveSaveDir, parsedBtLayout)
+    ? createBtStoragePlan(taskId, categorizedSaveDir, parsedBtLayout)
     : null
   let diskPath = btStoragePlan?.layout.workspacePath ?? toTempPath(finalPath)
   // Anchor "now" early so the hook DTO's requestedAt and the persisted
@@ -550,11 +554,10 @@ async function handleCreateTaskUnderAdmission(
     let currentHttpDesiredName = desiredName
     const pickHttpName = async (nextDesiredName: string): Promise<void> => {
       if (nextDesiredName === currentHttpDesiredName) return
-      finalName = await deps.finalNamePicker.pick(
-        categorizedSaveDir,
-        nextDesiredName
-      )
+      const nextSaveDir = categorySaveDirForName(nextDesiredName)
+      finalName = await deps.finalNamePicker.pick(nextSaveDir, nextDesiredName)
       currentHttpDesiredName = nextDesiredName
+      categorizedSaveDir = nextSaveDir
       finalPath = path.join(categorizedSaveDir, finalName)
       diskPath = toTempPath(finalPath)
       params.filename = `${finalName}${INCOMPLETE_SUFFIX}`
@@ -602,14 +605,17 @@ async function handleCreateTaskUnderAdmission(
             : ''
           const muxFinalName = titleBase
             ? await deps.finalNamePicker.pick(
-                categorizedSaveDir,
+                categorySaveDirForName(
+                  ensureMediaExtension(titleBase, muxResult.container)
+                ),
                 ensureMediaExtension(titleBase, muxResult.container)
               )
             : finalName
+          const muxSaveDir = categorySaveDirForName(muxFinalName)
           const adaptedMux: AdaptedMux = {
             kind: 'mux',
             taskId,
-            saveDir: categorizedSaveDir,
+            saveDir: muxSaveDir,
             finalName: muxFinalName,
             videoUrl: muxResult.videoUrl,
             audioUrl: muxResult.audioUrl,

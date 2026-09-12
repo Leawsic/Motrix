@@ -1,5 +1,9 @@
 import { RunMode } from '@shared/constants'
-import { DEFAULT_DOWNLOAD_CATEGORIES } from '@shared/constants/download-categories'
+import {
+  DEFAULT_DOWNLOAD_CATEGORIES,
+  DOWNLOAD_CATEGORIES,
+  isSafeCategoryFolderName,
+} from '@shared/constants/download-categories'
 import { DEFAULT_LOCALE } from '@shared/constants/locales'
 import type { MotrixAppSettings } from '@shared/types/settings'
 import { z } from 'zod'
@@ -17,6 +21,16 @@ export const magnetFileSelectionTimeoutSecondsSchema = z
 
 const downloadCategorySchema = z
   .record(z.string(), z.string())
+  .refine(
+    (categories) =>
+      Object.entries(categories).every(
+        ([category, folder]) =>
+          DOWNLOAD_CATEGORIES.includes(
+            category as (typeof DOWNLOAD_CATEGORIES)[number]
+          ) && isSafeCategoryFolderName(folder)
+      ),
+    'Download category folders must be non-empty single-level names'
+  )
   .catch(DEFAULT_DOWNLOAD_CATEGORIES)
 
 export const appSettingsSchema = z.object({
@@ -48,7 +62,7 @@ export const appSettingsSchema = z.object({
   warnBeforeQuit: z.boolean().catch(true),
   checkForUpdatesOnLaunch: z.boolean().catch(true),
   updateChannel: appUpdateChannelSchema.catch('stable'),
-  categorizeDownloadsByType: z.boolean().catch(false),
+  categorizeDownloadsByType: z.boolean().catch(true),
   downloadCategories: downloadCategorySchema,
 })
 

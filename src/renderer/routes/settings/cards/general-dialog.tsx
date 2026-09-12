@@ -16,9 +16,14 @@ import {
   FormItem,
   FormLabel,
 } from '@renderer/components/ui/form'
+import { Input } from '@renderer/components/ui/input'
 import { Switch } from '@renderer/components/ui/switch'
 import { pickDirty } from '@renderer/lib/form-utils'
 import { transport } from '@renderer/lib/transport'
+import {
+  DEFAULT_DOWNLOAD_CATEGORIES,
+  DOWNLOAD_CATEGORIES,
+} from '@shared/constants/download-categories'
 import { Commands } from '@shared/protocol/commands'
 import { Queries } from '@shared/protocol/queries'
 import { DEFAULT_APP_SETTINGS } from '@shared/schemas'
@@ -36,6 +41,8 @@ type GeneralFields = Pick<
   | 'notifyOnError'
   | 'autofillClipboardLinks'
   | 'warnBeforeQuit'
+  | 'categorizeDownloadsByType'
+  | 'downloadCategories'
 >
 
 // Source of truth: src/shared/schemas/app-settings.ts (DEFAULT_APP_SETTINGS).
@@ -48,6 +55,8 @@ const DEFAULTS: GeneralFields = {
   notifyOnError: DEFAULT_APP_SETTINGS.notifyOnError,
   autofillClipboardLinks: DEFAULT_APP_SETTINGS.autofillClipboardLinks,
   warnBeforeQuit: DEFAULT_APP_SETTINGS.warnBeforeQuit,
+  categorizeDownloadsByType: DEFAULT_APP_SETTINGS.categorizeDownloadsByType,
+  downloadCategories: DEFAULT_APP_SETTINGS.downloadCategories,
 }
 
 export function GeneralDialog({
@@ -76,6 +85,13 @@ export function GeneralDialog({
             notifyOnError: all.app.notifyOnError,
             autofillClipboardLinks: all.app.autofillClipboardLinks,
             warnBeforeQuit: all.app.warnBeforeQuit,
+            categorizeDownloadsByType:
+              all.app.categorizeDownloadsByType ??
+              DEFAULT_APP_SETTINGS.categorizeDownloadsByType,
+            downloadCategories: {
+              ...DEFAULT_DOWNLOAD_CATEGORIES,
+              ...all.app.downloadCategories,
+            },
           })
         }
       })
@@ -177,6 +193,71 @@ export function GeneralDialog({
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="categorizeDownloadsByType"
+                render={({ field }) => (
+                  <FormItem className="flex items-start justify-between gap-4">
+                    <div className="space-y-1">
+                      <FormLabel>
+                        {t('settings.general.categorizeDownloadsByType')}
+                      </FormLabel>
+                      <FormDescription className="text-xs">
+                        {t('settings.general.categorizeDownloadsByTypeDesc')}
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <div className="space-y-3 rounded-md border border-border bg-muted/20 p-3">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-medium">
+                    {t('settings.general.downloadCategories')}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {t('settings.general.downloadCategoriesDesc')}
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {DOWNLOAD_CATEGORIES.map((category) => (
+                    <FormField
+                      key={category}
+                      control={form.control}
+                      name={`downloadCategories.${category}` as const}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">
+                            {t(`settings.general.downloadCategory.${category}`)}
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value ?? ''}
+                              placeholder={
+                                DEFAULT_DOWNLOAD_CATEGORIES[category]
+                              }
+                              aria-label={t(
+                                `settings.general.downloadCategory.${category}`
+                              )}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            {t('settings.general.downloadCategoryDesc')}
+                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
 
               <FormField
                 control={form.control}

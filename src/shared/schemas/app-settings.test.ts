@@ -69,4 +69,20 @@ describe('appSettingsSchema', () => {
         .autofillClipboardLinks
     ).toBe(true)
   })
+
+  it('defaults and validates IDM-style download categories', () => {
+    expect(DEFAULT_APP_SETTINGS.categorizeDownloadsByType).toBe(true)
+    expect(DEFAULT_APP_SETTINGS.downloadCategories.Video).toBe('Video')
+    expect(
+      appSettingsSchema.parse({
+        categorizeDownloadsByType: true,
+        downloadCategories: { Video: 'Clips' },
+      }).downloadCategories.Video
+    ).toBe('Clips')
+    expect(
+      appSettingsSchema.parse({
+        downloadCategories: { Video: '../outside' },
+      }).downloadCategories.Video
+    ).toBe('Video')
+  })
 })

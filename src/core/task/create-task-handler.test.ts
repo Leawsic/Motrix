@@ -113,6 +113,13 @@ interface DepOverrides {
   pick?: (dir: string, name: string) => Promise<string>
   persist?: (id: string, bytes: Uint8Array) => Promise<string>
   defaultSaveDir?: string
+  categorizeDownloadsByType?: boolean
+  downloadCategories?: Partial<
+    Record<
+      import('@shared/constants/download-categories').DownloadCategory,
+      string
+    >
+  >
   proxySettings?: ProxySettings
   appliedProxySnapshot?: AppliedDownloadProxySnapshot
   engineUserAgent?: string
@@ -205,6 +212,8 @@ function makeDeps(overrides: DepOverrides = {}): Deps & {
   const settingsManager = {
     getApp: () => ({
       defaultSaveDir: overrides.defaultSaveDir ?? '/fallback',
+      categorizeDownloadsByType: overrides.categorizeDownloadsByType ?? false,
+      downloadCategories: overrides.downloadCategories ?? {},
     }),
     getEngine: () => ({
       performanceProfile: DEFAULT_ENGINE_SETTINGS.performanceProfile,
@@ -321,6 +330,35 @@ describe('handleCreateTask', () => {
     expect(JSON.stringify(logInfo.mock.calls)).not.toContain(
       'COOKIE_ONLY_IN_MEMORY'
     )
+  })
+
+  it('places HTTP downloads in the configured IDM-style category folder', async () => {
+    const deps = makeDeps({
+      categorizeDownloadsByType: true,
+      downloadCategories: { Video: 'Clips' },
+      pick: async (_dir, name) => name,
+    })
+
+    await handleCreateTask(
+      {
+        type: 'http',
+        uris: ['https://a/movie.mp4'],
+        saveDir: '/downloads',
+        headers: [],
+      },
+      deps
+    )
+
+    expect(deps.addUri).toHaveBeenCalledWith(
+      ['https://a/movie.mp4'],
+      expect.objectContaining({ dir: '/downloads/Clips' })
+    )
+    const task = lastAddedTask(deps)
+    expect(task.saveDir).toBe('/downloads/Clips')
+    expect(task.finalPath).toBe('/downloads/Clips/movie.mp4')
+    expect(mkdirMock).toHaveBeenCalledWith('/downloads/Clips', {
+      recursive: true,
+    })
   })
 
   it('reuses an exact active torrent before allocating storage or an engine gid', async () => {
