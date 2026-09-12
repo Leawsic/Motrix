@@ -276,7 +276,9 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const version =
     readArg('--version') ?? process.env.GITHUB_REF_NAME?.replace(/^v/, '')
   const requireAll = process.argv.includes('--require-all')
-  const targets = (readArg('--targets') ?? '').split(',').filter(Boolean)
+  const targets = (process.env.RELEASE_TARGETS ?? readArg('--targets') ?? '')
+    .split(',')
+    .filter(Boolean)
   const result = await verifyUpdateArtifacts({
     directory,
     version,

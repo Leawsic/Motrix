@@ -1476,6 +1476,7 @@ jobs:
     env:
       RELEASE_VERSION: ${{ needs.preflight.outputs.version }}
       RELEASE_CHANNEL: ${{ needs.preflight.outputs.channel }}
+      RELEASE_TARGETS: win32-x64
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
