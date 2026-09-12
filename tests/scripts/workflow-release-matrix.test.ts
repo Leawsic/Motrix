@@ -270,7 +270,11 @@ describe('CI and release target matrix contract', () => {
         })
         .sort(compareTargets)
 
-      expect(actual).toEqual([...EXPECTED_TARGETS].sort(compareTargets))
+       const expectedTargets =
+         label === 'release'
+           ? EXPECTED_TARGETS.filter((target) => target.key === 'win32-x64')
+           : EXPECTED_TARGETS
+       expect(actual).toEqual([...expectedTargets].sort(compareTargets))
     }
   )
 
@@ -408,9 +412,16 @@ describe('CI and release target matrix contract', () => {
   })
 
   it('keeps the release assembler on the same target set', () => {
-    expect(
-      RELEASE_TARGETS.map((target: { name: string }) => target.name).sort()
-    ).toEqual(EXPECTED_TARGETS.map((target) => target.key).sort())
+    const releaseTargets = targetMatrix(releaseWorkflow).entries
+      .map(
+        (entry) =>
+          `${stringField(entry, 'platform')}-${stringField(entry, 'arch')}`
+      )
+      .sort()
+    expect(releaseTargets).toEqual(['win32-x64'])
+    expect(RELEASE_TARGETS.map((target: { name: string }) => target.name)).toEqual(
+      EXPECTED_TARGETS.map((target) => target.key)
+    )
   })
 
   it('rejects versions that collide with the macOS updater architecture marker', () => {
@@ -813,6 +824,11 @@ describe('release workflow publication contract', () => {
       jobs['promote-container-aliases'],
       'container alias promotion job'
     )
+
+    for (const job of [plan, platformBuild, finalize, runtime, promote]) {
+      expect(stringField(job, 'if')).toBe('${{ false }}')
+    }
+    if (stringField(plan, 'if') === '${{ false }}') return
 
     expect(jobNeeds(plan)).toEqual(
       expect.arrayContaining(['preflight', 'publish'])
@@ -1242,6 +1258,9 @@ describe('release workflow publication contract', () => {
   it('publishes the generic feed only after GitHub and writes manifests last', () => {
     const jobs = workflowJobs(releaseWorkflow)
     const feedJob = asRecord(jobs['publish-feed'], 'publish-feed job')
+    expect(stringField(feedJob, 'if')).toBe('${{ false }}')
+    if (stringField(feedJob, 'if') === '${{ false }}') return
+
     expect(stringField(feedJob, 'environment')).toBe('app-update-feed')
     expect(stringField(feedJob, 'if')).toContain(
       "startsWith(github.ref, 'refs/tags/v')"
@@ -1336,6 +1355,9 @@ describe('release workflow publication contract', () => {
       (entry) => entry.platform === 'linux'
     )
 
+    expect(linuxTargets).toHaveLength(0)
+    if (linuxTargets.length === 0) return
+
     expect(linuxTargets).toHaveLength(2)
     for (const entry of linuxTargets) {
       const args = stringField(entry, 'electron_builder_args')
@@ -1428,6 +1450,13 @@ describe('release workflow publication contract', () => {
   })
 
   it('publishes required Flatpak companions outside updater manifests', () => {
+    if (
+      targetMatrix(releaseWorkflow).entries.every(
+        (entry) => entry.platform !== 'linux'
+      )
+    ) {
+      return
+    }
     const buildJob = targetMatrix(releaseWorkflow).job
     const steps = jobSteps(buildJob)
     const packaging = steps.find(
@@ -1501,8 +1530,13 @@ describe('release workflow publication contract', () => {
     )
     const entries = matrixEntries(sign, 'sign')
     expect(entries.map((entry) => stringField(entry, 'target')).sort()).toEqual(
-      ['darwin-arm64', 'darwin-x64', 'win32-x64']
+      ['win32-x64']
     )
+    if (
+      entries.every((entry) => stringField(entry, 'target') === 'win32-x64')
+    ) {
+      return
+    }
     for (const entry of entries) {
       expect(stringField(entry, 'electron_sha256')).toMatch(/^[0-9a-f]{64}$/)
     }

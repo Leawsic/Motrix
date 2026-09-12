@@ -1563,7 +1563,7 @@ jobs:
     name: Inspect Server container publication state
     needs: [preflight, publish]
     # Disabled for the Windows-only desktop release.
-    if: false
+    if: ${{ false }}
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     permissions:
@@ -1633,7 +1633,7 @@ jobs:
     name: Build Server / ${{ matrix.platform }}
     needs: [preflight, publish, plan-container-publication]
     # Disabled for the Windows-only desktop release.
-    if: false
+    if: ${{ false }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     environment: container-release
@@ -1813,7 +1813,7 @@ jobs:
     name: Finalize and publish verified Server index
     needs:
       [preflight, publish, plan-container-publication, build-container-platform]
-    if: false
+    if: ${{ false }}
     # Disabled for the Windows-only desktop release.
     runs-on: ubuntu-22.04
     timeout-minutes: 45
@@ -2150,7 +2150,7 @@ jobs:
   verify-container-runtime:
     name: Verify Server runtime / ${{ matrix.platform }}
     needs: [preflight, publish-container]
-    if: false
+    if: ${{ false }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     permissions:
@@ -2213,7 +2213,7 @@ jobs:
   promote-container-aliases:
     name: Promote verified stable Server aliases
     needs: [preflight, publish-container, verify-container-runtime]
-    if: false
+    if: ${{ false }}
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     environment: container-release
@@ -2313,7 +2313,7 @@ jobs:
     name: Publish dl.motrix.app update feed
     needs: [preflight, assemble, publish]
     # Disabled: the fork does not own the dl.motrix.app update feed credentials.
-    if: false
+    if: ${{ false }}
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     environment: app-update-feed
