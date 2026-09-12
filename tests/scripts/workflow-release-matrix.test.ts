@@ -253,8 +253,8 @@ describe('CI and release target matrix contract', () => {
     ['CI', ciWorkflow],
     ['release', releaseWorkflow],
   ] as const)(
-    '%s matrix contains exactly the five supported targets',
-    (_, workflow) => {
+    '%s matrix contains the expected supported targets',
+    (label, workflow) => {
       const { entries } = targetMatrix(workflow)
       const actual = entries
         .map((entry) => {
