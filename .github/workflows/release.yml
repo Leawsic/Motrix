@@ -1507,18 +1507,18 @@ jobs:
           node scripts/assemble-release-artifacts.mjs
           --input release-input
           --output release
-           --version "$RELEASE_VERSION"
-           --channel "$RELEASE_CHANNEL"
-           --targets=win32-x64
+          --version "$RELEASE_VERSION"
+          --channel "$RELEASE_CHANNEL"
+          --targets=win32-x64
 
       - name: Verify update artifacts
         run: >-
           pnpm --config.verify-deps-before-run=false run check:update-artifacts
           -- --version "$RELEASE_VERSION"
-           --dir release
-           --channel "$RELEASE_CHANNEL"
-           --targets=win32-x64
-           --require-all
+          --dir release
+          --channel "$RELEASE_CHANNEL"
+          --targets=win32-x64
+          --require-all
 
       - name: Upload validated release
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
