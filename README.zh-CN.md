@@ -22,8 +22,8 @@ Motrix 是一款界面简洁、功能丰富的桌面下载管理器，可处理 
 ## 🧪 Beta 测试
 
 Motrix Turbo v2 目前仍处于 beta 阶段。剩余发布门禁通过后，请从 GitHub Releases
-下载 [v2.0.0-beta.33](https://github.com/agalwood/Motrix/releases/tag/v2.0.0-beta.33)，
-并在安装前阅读[完整发布说明](./docs/release-notes/2.0.0-beta.33.zh-CN.md)。
+下载 [v2.0.0-beta.34](https://github.com/agalwood/Motrix/releases/tag/v2.0.0-beta.34)，
+并在安装前阅读[完整发布说明](./docs/release-notes/2.0.0-beta.34.zh-CN.md)。
 
 测试前请备份现有 Motrix 数据和下载文件。Motrix v1 数据的迁移路径尚未经过
 验证，请勿让本 beta 使用您唯一一份 v1 数据。条件允许时，建议通过独立的系统

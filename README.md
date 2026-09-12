@@ -22,8 +22,8 @@ The same core powers two ways to run Motrix:
 ## 🧪 Beta testing
 
 Motrix Turbo v2 is currently in beta. After its remaining release gates pass,
-download [v2.0.0-beta.33 from GitHub Releases](https://github.com/agalwood/Motrix/releases/tag/v2.0.0-beta.33)
-and read the [full release notes](./docs/release-notes/2.0.0-beta.33.md) before
+download [v2.0.0-beta.34 from GitHub Releases](https://github.com/agalwood/Motrix/releases/tag/v2.0.0-beta.34)
+and read the [full release notes](./docs/release-notes/2.0.0-beta.34.md) before
 installing it.
 
 Back up your existing Motrix data and downloads before testing. Migration from
