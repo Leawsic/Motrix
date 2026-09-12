@@ -270,11 +270,11 @@ describe('CI and release target matrix contract', () => {
         })
         .sort(compareTargets)
 
-       const expectedTargets =
-         label === 'release'
-           ? EXPECTED_TARGETS.filter((target) => target.key === 'win32-x64')
-           : EXPECTED_TARGETS
-       expect(actual).toEqual([...expectedTargets].sort(compareTargets))
+      const expectedTargets =
+        label === 'release'
+          ? EXPECTED_TARGETS.filter((target) => target.key === 'win32-x64')
+          : EXPECTED_TARGETS
+      expect(actual).toEqual([...expectedTargets].sort(compareTargets))
     }
   )
 
@@ -412,16 +412,16 @@ describe('CI and release target matrix contract', () => {
   })
 
   it('keeps the release assembler on the same target set', () => {
-    const releaseTargets = targetMatrix(releaseWorkflow).entries
-      .map(
+    const releaseTargets = targetMatrix(releaseWorkflow)
+      .entries.map(
         (entry) =>
           `${stringField(entry, 'platform')}-${stringField(entry, 'arch')}`
       )
       .sort()
     expect(releaseTargets).toEqual(['win32-x64'])
-    expect(RELEASE_TARGETS.map((target: { name: string }) => target.name)).toEqual(
-      EXPECTED_TARGETS.map((target) => target.key)
-    )
+    expect(
+      RELEASE_TARGETS.map((target: { name: string }) => target.name)
+    ).toEqual(EXPECTED_TARGETS.map((target) => target.key))
   })
 
   it('rejects versions that collide with the macOS updater architecture marker', () => {
@@ -826,9 +826,9 @@ describe('release workflow publication contract', () => {
     )
 
     for (const job of [plan, platformBuild, finalize, runtime, promote]) {
-      expect(stringField(job, 'if')).toBe('${{ false }}')
+      expect(stringField(job, 'if')).toBe('$' + '{{ false }}')
     }
-    if (stringField(plan, 'if') === '${{ false }}') return
+    if (stringField(plan, 'if') === '$' + '{{ false }}') return
 
     expect(jobNeeds(plan)).toEqual(
       expect.arrayContaining(['preflight', 'publish'])
@@ -1258,8 +1258,8 @@ describe('release workflow publication contract', () => {
   it('publishes the generic feed only after GitHub and writes manifests last', () => {
     const jobs = workflowJobs(releaseWorkflow)
     const feedJob = asRecord(jobs['publish-feed'], 'publish-feed job')
-    expect(stringField(feedJob, 'if')).toBe('${{ false }}')
-    if (stringField(feedJob, 'if') === '${{ false }}') return
+    expect(stringField(feedJob, 'if')).toBe('$' + '{{ false }}')
+    if (stringField(feedJob, 'if') === '$' + '{{ false }}') return
 
     expect(stringField(feedJob, 'environment')).toBe('app-update-feed')
     expect(stringField(feedJob, 'if')).toContain(
