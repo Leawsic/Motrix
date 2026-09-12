@@ -71,7 +71,7 @@ describe('appSettingsSchema', () => {
   })
 
   it('defaults and validates IDM-style download categories', () => {
-    expect(DEFAULT_APP_SETTINGS.categorizeDownloadsByType).toBe(true)
+    expect(DEFAULT_APP_SETTINGS.categorizeDownloadsByType).toBe(false)
     expect(DEFAULT_APP_SETTINGS.downloadCategories.Video).toBe('Video')
     expect(
       appSettingsSchema.parse({

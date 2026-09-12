@@ -249,7 +249,7 @@ export interface MotrixAppSettings {
    *  beta accepts beta and subsequent stable versions. Default stable. */
   updateChannel: AppUpdateChannel
   /** When true, downloads are automatically sorted into subfolders by file type
-   *  (Documents, Compressed, Music, Programs, Video, General). Default true. */
+   *  (Documents, Compressed, Music, Programs, Video, General). Default false. */
   categorizeDownloadsByType: boolean
   /** Custom folder names for each download category. Keys are category names,
    *  values are the subfolder names relative to the default save directory. */

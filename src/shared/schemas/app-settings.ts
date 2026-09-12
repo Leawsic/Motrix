@@ -62,7 +62,7 @@ export const appSettingsSchema = z.object({
   warnBeforeQuit: z.boolean().catch(true),
   checkForUpdatesOnLaunch: z.boolean().catch(true),
   updateChannel: appUpdateChannelSchema.catch('stable'),
-  categorizeDownloadsByType: z.boolean().catch(true),
+  categorizeDownloadsByType: z.boolean().catch(false),
   downloadCategories: downloadCategorySchema,
 })
 
